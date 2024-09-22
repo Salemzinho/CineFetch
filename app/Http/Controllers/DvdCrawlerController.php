@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use GuzzleHttp\Client;
+use Illuminate\Http\Request;
 
 class DvdCrawlerController extends Controller
 {
-    public function showDvdList()
+    public function showDvdList(Request $request)
     {
         $urls = [
             'https://videoperola.com.br/produtos/blu-ray-maligno/',
@@ -38,6 +39,42 @@ class DvdCrawlerController extends Controller
                 'cover' => $cover,
                 'title' => $this->extractTitle($url)
             ];
+        }
+
+        $search = $request->input('search');
+        $min_price = $request->input('min_price');
+        $max_price = $request->input('max_price');
+
+        if($search) {
+            $dvds = array_filter($dvds, function ($dvd) use ($search) {
+                return stripos($dvd['title'], $search) !== false;
+            });
+        }
+
+        if($min_price || $max_price) {
+            $dvds = array_filter($dvds, function ($dvd) use ($min_price, $max_price) {
+                $price = floatval(str_replace(['R$', ','], ['', '.'], $dvd['price']));
+
+                if($min_price && $price < $min_price) {
+                    return false;
+                }
+
+                if($max_price && $price > $max_price) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        if($request->input('sort') === 'asc') {
+            usort($dvds, function ($a, $b) {
+                return floatval(str_replace(['R$', ' '], '', $a['price'])) <=> floatval(str_replace(['R$', ' '], '', $b['price']));
+            });
+        } elseif($request->input('sort') === 'desc') {
+            usort($dvds, function ($a, $b) {
+                return floatval(str_replace(['R$', ' '], '', $b['price'])) <=> floatval(str_replace(['R$', ' '], '', $a['price']));
+            });
         }
 
         return view('dvds', ['dvds' => $dvds]);

@@ -12,6 +12,16 @@
         .card:hover {
             transform: scale(1.05);
         }
+        a{
+            color: #000;
+        }
+        a:hover{
+            text-decoration: none;
+            color: #000;
+        }
+        .text-shadow{
+            text-shadow: 3px 3px 4px #000;
+        }
     </style>
 </head>
 <body>
